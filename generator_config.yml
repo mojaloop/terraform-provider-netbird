@@ -1,0 +1,80 @@
+provider:
+  name: netbird
+
+resources:
+  setup_key:
+    create:
+      path: /api/setup-keys
+      method: POST
+    read:
+      path: /api/setup-keys/{keyId}
+      method: GET
+    update:
+      path: /api/setup-keys/{keyId}
+      method: PUT
+    delete:
+      path: /api/setup-keys/{keyId}
+      method: DELETE
+    schema:
+      attributes:
+        aliases:
+          keyId: id
+  group:
+    create:
+      path: /api/groups
+      method: POST
+    read:
+      path: /api/groups/{groupId}
+      method: GET
+    update:
+      path: /api/groups/{groupId}
+      method: PUT
+    delete:
+      path: /api/groups/{groupId}
+      method: DELETE
+    schema:
+      attributes:
+        aliases:
+          groupId: id
+  route:
+    create:
+      path: /api/routes
+      method: POST
+    read:
+      path: /api/routes/{routeId}
+      method: GET
+    update:
+      path: /api/routes/{routeId}
+      method: PUT
+    delete:
+      path: /api/routes/{routeId}
+      method: DELETE
+    schema:
+      attributes:
+        aliases:
+          routeId: id
+data_sources:
+  route:
+    read:
+      path: /api/routes/{routeId}
+      method: GET
+    schema:
+      attributes:
+        aliases:
+          routeId: id
+  routes:
+    read:
+      path: /api/routes
+      method: GET
+  group:
+    read:
+      path: /api/groups/{groupId}
+      method: GET
+    schema:
+      attributes:
+        aliases:
+          groupId: id
+  groups:
+    read:
+      path: /api/groups
+      method: GET

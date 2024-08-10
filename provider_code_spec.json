@@ -1,0 +1,364 @@
+{
+	"provider": {
+		"name": "netbird"
+	},
+	"resources": [
+		{
+			"name": "group",
+			"schema": {
+				"attributes": [
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "Group name identifier"
+						}
+					},
+					{
+						"name": "peers",
+						"list": {
+							"computed_optional_required": "computed_optional",
+							"element_type": {
+								"string": {}
+							},
+							"description": "List of peers ids"
+						}
+					},
+					{
+						"name": "id",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "The unique identifier of a group"
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "route",
+			"schema": {
+				"attributes": [
+					{
+						"name": "description",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "Route description"
+						}
+					},
+					{
+						"name": "domains",
+						"list": {
+							"computed_optional_required": "computed_optional",
+							"element_type": {
+								"string": {}
+							},
+							"description": "Domain list to be dynamically resolved. Conflicts with network"
+						}
+					},
+					{
+						"name": "enabled",
+						"bool": {
+							"computed_optional_required": "required",
+							"description": "Route status"
+						}
+					},
+					{
+						"name": "groups",
+						"list": {
+							"computed_optional_required": "required",
+							"element_type": {
+								"string": {}
+							},
+							"description": "Group IDs containing routing peers"
+						}
+					},
+					{
+						"name": "keep_route",
+						"bool": {
+							"computed_optional_required": "required",
+							"description": "Indicate if the route should be kept after a domain doesn't resolve that IP anymore"
+						}
+					},
+					{
+						"name": "masquerade",
+						"bool": {
+							"computed_optional_required": "required",
+							"description": "Indicate if peer should masquerade traffic to this route's prefix"
+						}
+					},
+					{
+						"name": "metric",
+						"int64": {
+							"computed_optional_required": "required",
+							"description": "Route metric number. Lowest number has higher priority",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+											}
+										],
+										"schema_definition": "int64validator.Between(1, 9999)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "network",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "Network range in CIDR format, Conflicts with domains"
+						}
+					},
+					{
+						"name": "network_id",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "Route network identifier, to group HA routes",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.LengthBetween(1, 40)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "peer",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "Peer Identifier associated with route. This property can not be set together with `peer_groups`"
+						}
+					},
+					{
+						"name": "peer_groups",
+						"list": {
+							"computed_optional_required": "computed_optional",
+							"element_type": {
+								"string": {}
+							},
+							"description": "Peers Group Identifier associated with route. This property can not be set together with `peer`"
+						}
+					},
+					{
+						"name": "id",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "The unique identifier of a route"
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "setup_key",
+			"schema": {
+				"attributes": [
+					{
+						"name": "auto_groups",
+						"list": {
+							"computed_optional_required": "required",
+							"element_type": {
+								"string": {}
+							},
+							"description": "List of group IDs to auto-assign to peers registered with this key"
+						}
+					},
+					{
+						"name": "ephemeral",
+						"bool": {
+							"computed_optional_required": "computed_optional",
+							"description": "Indicate that the peer will be ephemeral or not"
+						}
+					},
+					{
+						"name": "expires_in",
+						"int64": {
+							"computed_optional_required": "required",
+							"description": "Expiration time in seconds",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+											}
+										],
+										"schema_definition": "int64validator.Between(86400, 31536000)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "Setup Key name"
+						}
+					},
+					{
+						"name": "type",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "Setup key type, one-off for single time usage and reusable"
+						}
+					},
+					{
+						"name": "usage_limit",
+						"int64": {
+							"computed_optional_required": "required",
+							"description": "A number of times this key can be used. The value of 0 indicates the unlimited usage."
+						}
+					},
+					{
+						"name": "expires",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "Setup Key expiration date"
+						}
+					},
+					{
+						"name": "id",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "Setup Key ID"
+						}
+					},
+					{
+						"name": "key",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "Setup Key value"
+						}
+					},
+					{
+						"name": "last_used",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "Setup key last usage date"
+						}
+					},
+					{
+						"name": "revoked",
+						"bool": {
+							"computed_optional_required": "computed",
+							"description": "Setup key revocation status"
+						}
+					},
+					{
+						"name": "state",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "Setup key status, \"valid\", \"overused\",\"expired\" or \"revoked\""
+						}
+					},
+					{
+						"name": "updated_at",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "Setup key last update date"
+						}
+					},
+					{
+						"name": "used_times",
+						"int64": {
+							"computed_optional_required": "computed",
+							"description": "Usage count of setup key"
+						}
+					},
+					{
+						"name": "valid",
+						"bool": {
+							"computed_optional_required": "computed",
+							"description": "Setup key validity status"
+						}
+					}
+				]
+			}
+		}
+	],
+	"datasources": [
+		{
+			"name": "group",
+			"schema": {
+				"attributes": [
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "Group name identifier"
+						}
+					},
+					{
+						"name": "peers",
+						"list": {
+							"computed_optional_required": "computed_optional",
+							"element_type": {
+								"string": {}
+							},
+							"description": "List of peers ids"
+						}
+					},
+					{
+						"name": "id",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "The unique identifier of a group"
+						}
+					}
+				]
+			}
+		},
+		{
+		    "name": "groups",
+		    "schema": {
+			    "attributes": [
+					{
+						"name": "groups",
+						"list_nested": {
+							"computed_optional_required": "optional",
+							"nested_object": {
+								"attributes": [
+									{
+										"name": "name",
+										"string": {
+											"computed_optional_required": "required",
+											"description": "Group name identifier"
+										}
+									},
+									{
+										"name": "peers",
+										"list": {
+											"computed_optional_required": "computed_optional",
+											"element_type": {
+												"string": {}
+											},
+											"description": "List of peers ids"
+										}
+									},
+									{
+										"name": "id",
+										"string": {
+											"computed_optional_required": "computed_optional",
+											"description": "The unique identifier of a group"
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		}
+	],
+	"version": "0.1"
+}
