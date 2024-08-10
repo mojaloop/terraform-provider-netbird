@@ -26,6 +26,18 @@ resource "netbird_group" "test" {
   name = "test_group8"
 }
 
-# resource "netbird_route" "test_route" {
+resource "netbird_group" "test_gw" {
+  name = "gw-test-8"
+}
 
-# }
+resource "netbird_route" "test_route" {
+  description = "testroute8"
+  enabled     = true
+  groups      = [netbird_group.test.id]
+  keep_route  = false
+  masquerade  = true
+  metric      = 9999
+  peer_groups = [netbird_group.test_gw.id]
+  network     = "10.10.10.0/24"
+  network_id  = "testroute8"
+}

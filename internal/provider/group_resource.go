@@ -183,15 +183,18 @@ func toGroupModel(ctx context.Context, data *sdk.Group) (resource_group.GroupMod
 
 	var diags diag.Diagnostics
 	var peersToApply types.List
+	var _diags diag.Diagnostics
+
 	if data.Peers != nil {
 		peers := make([]string, len(data.Peers))
 		for i, v := range data.Peers {
 			peers[i] = v.Id
 		}
-		peersToApply, diags = types.ListValueFrom(ctx, types.StringType, peers)
+		peersToApply, _diags = types.ListValueFrom(ctx, types.StringType, peers)
 	} else {
-		peersToApply, diags = types.ListValueFrom(ctx, types.StringType, []string{})
+		peersToApply, _diags = types.ListValueFrom(ctx, types.StringType, []string{})
 	}
+	diags.Append(_diags...)
 	model.Peers = peersToApply
 	return model, diags
 }

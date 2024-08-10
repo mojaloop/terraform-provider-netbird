@@ -282,14 +282,16 @@ func toSetupKeyModel(ctx context.Context, data *sdk.SetupKey) (resource_setup_ke
 	}
 
 	var diags diag.Diagnostics
+	var _diags diag.Diagnostics
 	var autoGroupsToApply types.List
 	if data.AutoGroups != nil {
 		autoGroups := make([]string, len(data.AutoGroups))
 		copy(autoGroups, data.AutoGroups)
-		autoGroupsToApply, diags = types.ListValueFrom(ctx, types.StringType, autoGroups)
+		autoGroupsToApply, _diags = types.ListValueFrom(ctx, types.StringType, autoGroups)
 	} else {
-		autoGroupsToApply, diags = types.ListValueFrom(ctx, types.StringType, []string{})
+		autoGroupsToApply, _diags = types.ListValueFrom(ctx, types.StringType, []string{})
 	}
+	diags.Append(_diags...)
 	model.AutoGroups = autoGroupsToApply
 
 	return model, diags
