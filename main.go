@@ -6,8 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-
-	"github.com/netbirdio/netbird-terraform-provider/internal/provider"
+	"github.com/netbirdio/terraform-provider-netbird/internal/provider"
 )
 
 func main() {

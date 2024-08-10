@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/netbirdio/netbird-terraform-provider/internal/sdk"
+	"github.com/netbirdio/terraform-provider-netbird/internal/sdk"
 )
 
 var _ provider.Provider = (*netbirdProvider)(nil)
@@ -79,11 +79,17 @@ func (p *netbirdProvider) Metadata(ctx context.Context, req provider.MetadataReq
 }
 
 func (p *netbirdProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		NewGroupDataSource,
+		NewGroupsDataSource,
+		NewRouteDataSource,
+	}
 }
 
 func (p *netbirdProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewSetupKeyResource,
+		NewGroupResource,
+		NewRouteResource,
 	}
 }

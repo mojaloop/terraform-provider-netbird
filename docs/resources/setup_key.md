@@ -20,14 +20,12 @@ description: |-
 - `auto_groups` (List of String) List of group IDs to auto-assign to peers registered with this key
 - `expires_in` (Number) Expiration time in seconds
 - `name` (String) Setup Key name
-- `revoked` (Boolean) Setup key revocation status
 - `type` (String) Setup key type, one-off for single time usage and reusable
 - `usage_limit` (Number) A number of times this key can be used. The value of 0 indicates the unlimited usage.
 
 ### Optional
 
 - `ephemeral` (Boolean) Indicate that the peer will be ephemeral or not
-- `key_id` (String) The unique identifier of a setup key
 
 ### Read-Only
 
@@ -35,6 +33,7 @@ description: |-
 - `id` (String) Setup Key ID
 - `key` (String) Setup Key value
 - `last_used` (String) Setup key last usage date
+- `revoked` (Boolean) Setup key revocation status
 - `state` (String) Setup key status, "valid", "overused","expired" or "revoked"
 - `updated_at` (String) Setup key last update date
 - `used_times` (Number) Usage count of setup key

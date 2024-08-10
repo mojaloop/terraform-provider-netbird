@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
-	"github.com/netbirdio/netbird-terraform-provider/internal/provider/resource_setup_key"
-	"github.com/netbirdio/netbird-terraform-provider/internal/sdk"
+	"github.com/netbirdio/terraform-provider-netbird/internal/provider/resource_setup_key"
+	"github.com/netbirdio/terraform-provider-netbird/internal/sdk"
 )
 
 var _ resource.Resource = (*setupKeyResource)(nil)
@@ -56,7 +54,7 @@ func (r *setupKeyResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	res, err := r.client.PostApiSetupKeysWithResponse(ctx, toSetupKeyApiRequest(data))
+	res, err := r.client.PostApiSetupKeysWithResponse(ctx, toCreateSetupKeyApiRequest(data))
 	if err != nil {
 		resp.Diagnostics.AddError("failure to invoke create setup key API", err.Error())
 		return
@@ -67,7 +65,7 @@ func (r *setupKeyResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	createdSetupKey, diags := toSetupKeyModel(res.JSON200)
+	createdSetupKey, diags := toSetupKeyModel(ctx, res.JSON200)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -96,7 +94,7 @@ func (r *setupKeyResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	setupKey, diags := toSetupKeyModel(res.JSON200)
+	setupKey, diags := toSetupKeyModel(ctx, res.JSON200)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -131,7 +129,7 @@ func (r *setupKeyResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	setupKey, diags := toSetupKeyModel(res.JSON200)
+	setupKey, diags := toSetupKeyModel(ctx, res.JSON200)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -143,13 +141,18 @@ func (r *setupKeyResource) Update(ctx context.Context, req resource.UpdateReques
 
 func (r *setupKeyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data resource_setup_key.SetupKeyModel
+	var diags diag.Diagnostics
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.Revoked = types.BoolValue(true)
 
+	data.Revoked = types.BoolValue(true)
+	data.AutoGroups, diags = types.ListValueFrom(ctx, types.StringType, []string{})
+	if diags.HasError() {
+		return
+	}
 	res, err := r.client.PutApiSetupKeysKeyIdWithResponse(ctx, data.Id.ValueString(), toSetupKeyApiRequest(data))
 	if err != nil {
 		resp.Diagnostics.AddError("failure to invoke update setup key API", err.Error())
@@ -159,6 +162,52 @@ func (r *setupKeyResource) Delete(ctx context.Context, req resource.DeleteReques
 	if res.StatusCode() != 200 {
 		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
+	}
+}
+
+func toCreateSetupKeyApiRequest(data resource_setup_key.SetupKeyModel) sdk.CreateSetupKeyRequest {
+	autoGroups := make([]string, len(data.AutoGroups.Elements()))
+	for i, v := range data.AutoGroups.Elements() {
+		if !v.IsUnknown() && !v.IsNull() {
+			value, ok := v.(types.String)
+			if ok {
+				autoGroups[i] = value.ValueString()
+			}
+		}
+	}
+
+	name := ""
+	if !data.Name.IsUnknown() && !data.Name.IsNull() {
+		name = data.Name.ValueString()
+	}
+
+	ephemeral := new(bool)
+	if !data.Ephemeral.IsUnknown() && !data.Ephemeral.IsNull() {
+		ephemeral = data.Ephemeral.ValueBoolPointer()
+	}
+
+	expiresIn := int64(0)
+	if !data.ExpiresIn.IsUnknown() && !data.ExpiresIn.IsNull() {
+		expiresIn = data.ExpiresIn.ValueInt64()
+	}
+
+	keyType := ""
+	if !data.Type.IsUnknown() && !data.Type.IsNull() {
+		keyType = data.Type.ValueString()
+	}
+
+	usageLimit := int64(0)
+	if !data.UsageLimit.IsUnknown() && !data.UsageLimit.IsNull() {
+		usageLimit = data.UsageLimit.ValueInt64()
+	}
+
+	return sdk.CreateSetupKeyRequest{
+		AutoGroups: autoGroups,
+		Ephemeral:  ephemeral,
+		ExpiresIn:  int(expiresIn),
+		Name:       name,
+		Type:       keyType,
+		UsageLimit: int(usageLimit),
 	}
 }
 
@@ -208,13 +257,14 @@ func toSetupKeyApiRequest(data resource_setup_key.SetupKeyModel) sdk.SetupKeyReq
 		Ephemeral:  ephemeral,
 		ExpiresIn:  int(expiresIn),
 		Name:       name,
-		Revoked:    revoked,
+
 		Type:       keyType,
 		UsageLimit: int(usageLimit),
+		Revoked:    revoked,
 	}
 }
 
-func toSetupKeyModel(data *sdk.SetupKey) (resource_setup_key.SetupKeyModel, diag.Diagnostics) {
+func toSetupKeyModel(ctx context.Context, data *sdk.SetupKey) (resource_setup_key.SetupKeyModel, diag.Diagnostics) {
 	model := resource_setup_key.SetupKeyModel{
 		Ephemeral:  types.BoolValue(data.Ephemeral),
 		Expires:    types.StringValue(data.Expires.String()),
@@ -231,17 +281,16 @@ func toSetupKeyModel(data *sdk.SetupKey) (resource_setup_key.SetupKeyModel, diag
 		Valid:      types.BoolValue(data.Valid),
 	}
 
-	var autoGroups basetypes.ListValue
 	var diags diag.Diagnostics
-
+	var autoGroupsToApply types.List
 	if data.AutoGroups != nil {
-		groups := make([]attr.Value, len(data.AutoGroups))
-		for i, v := range data.AutoGroups {
-			groups[i] = types.StringValue(v)
-		}
-		autoGroups, diags = basetypes.NewListValue(basetypes.StringType{}, groups)
+		autoGroups := make([]string, len(data.AutoGroups))
+		copy(autoGroups, data.AutoGroups)
+		autoGroupsToApply, diags = types.ListValueFrom(ctx, types.StringType, autoGroups)
+	} else {
+		autoGroupsToApply, diags = types.ListValueFrom(ctx, types.StringType, []string{})
 	}
-	model.AutoGroups = autoGroups
+	model.AutoGroups = autoGroupsToApply
 
 	return model, diags
 }
