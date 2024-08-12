@@ -66,14 +66,6 @@ data_sources:
     read:
       path: /api/routes
       method: GET
-  group:
-    read:
-      path: /api/groups/{groupId}
-      method: GET
-    schema:
-      attributes:
-        aliases:
-          groupId: id
   groups:
     read:
       path: /api/groups
