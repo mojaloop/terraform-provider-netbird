@@ -9,8 +9,9 @@ terraform {
 
 
 provider "netbird" {
-  server_url = "https://netbird.cc50.ccnew.mojaloop.live:443"
-  token_auth = "<<replace>>"
+  server_url        = "https://netbird.cc50.ccnew.mojaloop.live:443"
+  oauth_credentials = "${path.cwd}/netbird-oauth.json"
+  oauth_issuer      = "https://zitadel.cc50.ccnew.mojaloop.live/oauth/v2/token"
 }
 
 resource "netbird_setup_key" "tf_test_key_2" {
