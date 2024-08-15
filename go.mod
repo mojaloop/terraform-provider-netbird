@@ -1,6 +1,6 @@
 module github.com/netbirdio/terraform-provider-netbird
 
-go 1.21.0
+go 1.21
 
 require (
 	github.com/deepmap/oapi-codegen/v2 v2.1.0
