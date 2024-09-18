@@ -3,15 +3,20 @@ terraform {
     netbird = {
       source = "github.com/netbirdio/netbird"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "0.12.1"
+    }
   }
+}
+provider "time" {
 }
 
 
-
 provider "netbird" {
-  server_url        = "https://netbird.cc50.ccnew.mojaloop.live:443"
+  server_url        = "https://netbird.cntrlcntr.ccv2.mojaloop.live:443"
   oauth_credentials = "${path.cwd}/netbird-oauth.json"
-  oauth_issuer      = "https://zitadel.cc50.ccnew.mojaloop.live/oauth/v2/token"
+  oauth_issuer      = "https://zitadel.cntrlcntr.ccv2.mojaloop.live/oauth/v2/token"
 }
 
 resource "netbird_setup_key" "tf_test_key_2" {
@@ -21,6 +26,19 @@ resource "netbird_setup_key" "tf_test_key_2" {
   ephemeral   = true
   usage_limit = 1
   expires_in  = 86400
+}
+resource "time_rotating" "setup_key_rotation" {
+  rotation_minutes = 3
+}
+
+resource "netbird_setup_key" "tf_key_rotate" {
+  name        = "tf_linux_key_rotate"
+  type        = "reusable"
+  auto_groups = [netbird_group.test.id]
+  ephemeral   = false
+  usage_limit = 0
+  expires_in  = 86400
+  rotation_id = time_rotating.setup_key_rotation.id
 }
 
 resource "netbird_group" "test" {

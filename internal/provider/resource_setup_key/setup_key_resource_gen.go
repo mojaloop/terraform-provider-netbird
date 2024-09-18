@@ -4,11 +4,13 @@ package resource_setup_key
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 )
 
 func SetupKeyResourceSchema(ctx context.Context) schema.Schema {
@@ -94,6 +96,13 @@ func SetupKeyResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Setup key validity status",
 				MarkdownDescription: "Setup key validity status",
 			},
+			"rotation_id":  schema.StringAttribute{
+				Description: "trigger rotation of setup key",
+				Optional:    true,
+				PlanModifiers: []planmodifier.String{
+                    stringplanmodifier.RequiresReplace(),
+                },
+			},
 		},
 	}
 }
@@ -114,4 +123,5 @@ type SetupKeyModel struct {
 	UsageLimit types.Int64  `tfsdk:"usage_limit"`
 	UsedTimes  types.Int64  `tfsdk:"used_times"`
 	Valid      types.Bool   `tfsdk:"valid"`
+	RotationId types.String `tfsdk:"rotation_id"`
 }
