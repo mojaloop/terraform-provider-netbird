@@ -84,7 +84,7 @@ func (r *groupResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from read group resource API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
@@ -117,7 +117,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from update group resource API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
@@ -147,7 +147,7 @@ func (r *groupResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if res.StatusCode != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode), "")
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from delete group resource API. Got an unexpected response code %d", res.StatusCode), "")
 		return
 	}
 }
@@ -183,15 +183,18 @@ func toGroupModel(ctx context.Context, data *sdk.Group) (resource_group.GroupMod
 
 	var diags diag.Diagnostics
 	var peersToApply types.List
+	var _diags diag.Diagnostics
+
 	if data.Peers != nil {
 		peers := make([]string, len(data.Peers))
 		for i, v := range data.Peers {
 			peers[i] = v.Id
 		}
-		peersToApply, diags = types.ListValueFrom(ctx, types.StringType, peers)
+		peersToApply, _diags = types.ListValueFrom(ctx, types.StringType, peers)
 	} else {
-		peersToApply, diags = types.ListValueFrom(ctx, types.StringType, []string{})
+		peersToApply, _diags = types.ListValueFrom(ctx, types.StringType, []string{})
 	}
+	diags.Append(_diags...)
 	model.Peers = peersToApply
 	return model, diags
 }

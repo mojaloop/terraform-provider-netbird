@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/netbirdio/terraform-provider-netbird/internal/provider/resource_route"
 	"github.com/netbirdio/terraform-provider-netbird/internal/sdk"
 )
@@ -56,13 +54,13 @@ func (r *routeResource) Create(ctx context.Context, req resource.CreateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	res, err := r.client.PostApiRoutesWithResponse(ctx, toCreateRouteApiRequest(data))
+	routeRequest := toCreateRouteApiRequest(data)
+	res, err := r.client.PostApiRoutesWithResponse(ctx, routeRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failure to invoke create route API", err.Error())
 		return
 	}
-	createRoute, diags := toRouteModel(res.JSON200)
+	createRoute, diags := toRouteModel(ctx, res.JSON200)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -90,10 +88,10 @@ func (r *routeResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from read route API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
-	route, diags := toRouteModel(res.JSON200)
+	route, diags := toRouteModel(ctx, res.JSON200)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -122,14 +120,14 @@ func (r *routeResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	route, diags := toRouteModel(res.JSON200)
+	route, diags := toRouteModel(ctx, res.JSON200)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from update route API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
@@ -153,13 +151,14 @@ func (r *routeResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from delete route API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
 }
 
-func toRouteModel(data *sdk.Route) (resource_route.RouteModel, diag.Diagnostics) {
+func toRouteModel(ctx context.Context, data *sdk.Route) (resource_route.RouteModel, diag.Diagnostics) {
+
 	model := resource_route.RouteModel{
 		Description: types.StringValue(data.Description),
 		Enabled:     types.BoolValue(data.Enabled),
@@ -169,34 +168,40 @@ func toRouteModel(data *sdk.Route) (resource_route.RouteModel, diag.Diagnostics)
 		Network:     types.StringValue(*data.Network),
 		NetworkId:   types.StringValue(data.NetworkId),
 		Peer:        types.StringValue(*data.Peer),
+		Id:          types.StringValue(data.Id),
 	}
 
-	var groups basetypes.ListValue
-	var peerGroups basetypes.ListValue
-	var domains basetypes.ListValue
+	var groups types.List
+	var peerGroups types.List
+	var domains types.List
+	var _diags diag.Diagnostics
 	var diags diag.Diagnostics
-
 	if data.Groups != nil {
-		_groups := make([]attr.Value, len(data.Groups))
-		for i, v := range data.Groups {
-			_groups[i] = types.StringValue(v)
-		}
-		groups, diags = basetypes.NewListValue(basetypes.StringType{}, _groups)
+		_groups := make([]string, len(data.Groups))
+		copy(_groups, data.Groups)
+		groups, _diags = types.ListValueFrom(ctx, types.StringType, _groups)
+	} else {
+		groups, _diags = types.ListValueFrom(ctx, types.StringType, []string{})
 	}
+	diags.Append(_diags...)
+
 	if data.Domains != nil {
-		_domains := make([]attr.Value, len(*data.Domains))
-		for i, v := range *data.Domains {
-			_domains[i] = types.StringValue(v)
-		}
-		domains, diags = basetypes.NewListValue(basetypes.StringType{}, _domains)
+		_domains := make([]string, len(*data.Domains))
+		copy(_domains, *data.Domains)
+		domains, diags = types.ListValueFrom(ctx, types.StringType, _domains)
+	} else {
+		domains, diags = types.ListValueFrom(ctx, types.StringType, []string{})
 	}
+	diags.Append(_diags...)
+
 	if data.PeerGroups != nil {
-		_peerGroups := make([]attr.Value, len(*data.PeerGroups))
-		for i, v := range data.Groups {
-			_peerGroups[i] = types.StringValue(v)
-		}
-		groups, diags = basetypes.NewListValue(basetypes.StringType{}, _peerGroups)
+		_peerGroups := make([]string, len(*data.PeerGroups))
+		copy(_peerGroups, *data.PeerGroups)
+		peerGroups, diags = types.ListValueFrom(ctx, types.StringType, _peerGroups)
+	} else {
+		peerGroups, diags = types.ListValueFrom(ctx, types.StringType, []string{})
 	}
+	diags.Append(_diags...)
 
 	model.Groups = groups
 	model.Domains = domains
@@ -215,25 +220,32 @@ func toCreateRouteApiRequest(data resource_route.RouteModel) sdk.RouteRequest {
 			}
 		}
 	}
-	domains := make([]string, len(data.Domains.Elements()))
-	for i, v := range data.Domains.Elements() {
-		if !v.IsUnknown() && !v.IsNull() {
-			value, ok := v.(types.String)
-			if ok {
-				domains[i] = value.ValueString()
+	var domainsPoint *[]string
+	if len(data.Domains.Elements()) > 0 {
+		domains := make([]string, len(data.Domains.Elements()))
+		for i, v := range data.Domains.Elements() {
+			if !v.IsUnknown() && !v.IsNull() {
+				value, ok := v.(types.String)
+				if ok {
+					domains[i] = value.ValueString()
+				}
 			}
 		}
+		domainsPoint = &domains
 	}
-	peerGroups := make([]string, len(data.PeerGroups.Elements()))
-	for i, v := range data.PeerGroups.Elements() {
-		if !v.IsUnknown() && !v.IsNull() {
-			value, ok := v.(types.String)
-			if ok {
-				peerGroups[i] = value.ValueString()
+	var peerGroupsPoint *[]string
+	if len(data.PeerGroups.Elements()) > 0 {
+		peerGroups := make([]string, len(data.PeerGroups.Elements()))
+		for i, v := range data.PeerGroups.Elements() {
+			if !v.IsUnknown() && !v.IsNull() {
+				value, ok := v.(types.String)
+				if ok {
+					peerGroups[i] = value.ValueString()
+				}
 			}
+			peerGroupsPoint = &peerGroups
 		}
 	}
-
 	description := ""
 	if !data.Description.IsUnknown() && !data.Description.IsNull() {
 		description = data.Description.ValueString()
@@ -259,8 +271,7 @@ func toCreateRouteApiRequest(data resource_route.RouteModel) sdk.RouteRequest {
 		metric = int(data.Metric.ValueInt64())
 	}
 
-	network := ""
-	netpoint := &network
+	var netpoint *string
 	if !data.Network.IsUnknown() && !data.Network.IsNull() {
 		netpoint = data.Network.ValueStringPointer()
 	}
@@ -270,8 +281,7 @@ func toCreateRouteApiRequest(data resource_route.RouteModel) sdk.RouteRequest {
 		networkId = data.NetworkId.ValueString()
 	}
 
-	peer := ""
-	peerPoint := &peer
+	var peerPoint *string
 	if !data.Peer.IsUnknown() && !data.Peer.IsNull() {
 		peerPoint = data.Peer.ValueStringPointer()
 	}
@@ -285,9 +295,9 @@ func toCreateRouteApiRequest(data resource_route.RouteModel) sdk.RouteRequest {
 		Network:     netpoint,
 		NetworkId:   networkId,
 		Peer:        peerPoint,
-		PeerGroups:  &peerGroups,
+		PeerGroups:  peerGroupsPoint,
 		Groups:      groups,
-		Domains:     &domains,
+		Domains:     domainsPoint,
 	}
 	return routeRequest
 }

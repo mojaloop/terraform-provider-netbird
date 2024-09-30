@@ -61,7 +61,7 @@ func (r *setupKeyResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from create setupkey API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
@@ -71,6 +71,7 @@ func (r *setupKeyResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 	createdSetupKey.ExpiresIn = data.ExpiresIn
+	createdSetupKey.RotationId = data.RotationId
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &createdSetupKey)...)
 }
@@ -90,7 +91,7 @@ func (r *setupKeyResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from read setupkey API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
@@ -100,7 +101,7 @@ func (r *setupKeyResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 	setupKey.ExpiresIn = data.ExpiresIn
-
+	setupKey.RotationId = data.RotationId
 	resp.Diagnostics.Append(resp.State.Set(ctx, &setupKey)...)
 }
 
@@ -125,7 +126,7 @@ func (r *setupKeyResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from update setupkey API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
@@ -135,7 +136,7 @@ func (r *setupKeyResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 	setupKey.ExpiresIn = plan.ExpiresIn
-
+	setupKey.RotationId = plan.RotationId
 	resp.Diagnostics.Append(resp.State.Set(ctx, &setupKey)...)
 }
 
@@ -160,7 +161,7 @@ func (r *setupKeyResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from delete setupkey API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 }
@@ -282,14 +283,16 @@ func toSetupKeyModel(ctx context.Context, data *sdk.SetupKey) (resource_setup_ke
 	}
 
 	var diags diag.Diagnostics
+	var _diags diag.Diagnostics
 	var autoGroupsToApply types.List
 	if data.AutoGroups != nil {
 		autoGroups := make([]string, len(data.AutoGroups))
 		copy(autoGroups, data.AutoGroups)
-		autoGroupsToApply, diags = types.ListValueFrom(ctx, types.StringType, autoGroups)
+		autoGroupsToApply, _diags = types.ListValueFrom(ctx, types.StringType, autoGroups)
 	} else {
-		autoGroupsToApply, diags = types.ListValueFrom(ctx, types.StringType, []string{})
+		autoGroupsToApply, _diags = types.ListValueFrom(ctx, types.StringType, []string{})
 	}
+	diags.Append(_diags...)
 	model.AutoGroups = autoGroupsToApply
 
 	return model, diags

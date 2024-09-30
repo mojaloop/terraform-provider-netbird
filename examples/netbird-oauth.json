@@ -1,0 +1,6 @@
+{
+    "client_id": "netbird-api-admin",
+    "client_secret": "<<replace>>",
+    "grant_type": "client_credentials",
+    "scope": "openid email profile urn:iam:org:project:roles urn:zitadel:iam:org:projects:roles  urn:zitadel:iam:org:project:id:279431435549460524:aud zitadel:grants"
+}

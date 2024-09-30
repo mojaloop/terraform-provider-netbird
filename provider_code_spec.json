@@ -288,42 +288,11 @@
 	],
 	"datasources": [
 		{
-			"name": "group",
-			"schema": {
-				"attributes": [
-					{
-						"name": "name",
-						"string": {
-							"computed_optional_required": "required",
-							"description": "Group name identifier"
-						}
-					},
-					{
-						"name": "peers",
-						"list": {
-							"computed_optional_required": "computed_optional",
-							"element_type": {
-								"string": {}
-							},
-							"description": "List of peers ids"
-						}
-					},
-					{
-						"name": "id",
-						"string": {
-							"computed_optional_required": "computed_optional",
-							"description": "The unique identifier of a group"
-						}
-					}
-				]
-			}
-		},
-		{
 		    "name": "groups",
 		    "schema": {
 			    "attributes": [
 					{
-						"name": "groups",
+						"name": "all_groups",
 						"list_nested": {
 							"computed_optional_required": "optional",
 							"nested_object": {
