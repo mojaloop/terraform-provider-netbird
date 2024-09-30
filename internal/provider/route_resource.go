@@ -88,7 +88,7 @@ func (r *routeResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from read route API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 	route, diags := toRouteModel(ctx, res.JSON200)
@@ -127,7 +127,7 @@ func (r *routeResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from update route API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
@@ -151,7 +151,7 @@ func (r *routeResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from delete route API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 

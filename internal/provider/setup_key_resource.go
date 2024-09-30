@@ -61,7 +61,7 @@ func (r *setupKeyResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from create setupkey API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
@@ -91,7 +91,7 @@ func (r *setupKeyResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from read setupkey API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
@@ -126,7 +126,7 @@ func (r *setupKeyResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from update setupkey API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 
@@ -161,7 +161,7 @@ func (r *setupKeyResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	if res.StatusCode() != 200 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
+		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from delete setupkey API. Got an unexpected response code %d", res.StatusCode()), string(res.Body))
 		return
 	}
 }
